@@ -1,0 +1,16 @@
+trainer:
+  max_epochs: 100
+  default_root_dir: logs/autoencoder
+model: 
+  class_path: module.autoencoder_module.AutoEncoderModule
+  init_args:
+    autoencoder: 
+      class_path: model.autoencoder.Autoencoder
+data:
+  class_path: dataset.cifar10.Cifar10DataModule
+  init_args:
+    batch_size: 32
+
+# optimizer: Adam
+# optimizer
+  
