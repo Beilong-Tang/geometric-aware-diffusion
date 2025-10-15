@@ -17,21 +17,21 @@ class Autoencoder(nn.Module):
             nn.Conv2d(12, 24, 4, stride=2, padding=1),  # [batch, 24, 8, 8]
             nn.ReLU(),
             nn.Conv2d(24, 48, 4, stride=2, padding=1),  # [batch, 48, 4, 4]
-            nn.ReLU(),
-            nn.Conv2d(48, 96, 4, stride=2, padding=1),  # [batch, 96, 2, 2]
-            nn.ReLU(),
-            nn.Flatten(),  # [batch, 96*2*2]
-            nn.Linear(self.latent_dim, emb_dim),  # [batch, emb_dim]
-            nn.Sigmoid()
+            nn.ReLU()
+            # nn.Conv2d(48, 96, 4, stride=2, padding=1),  # [batch, 96, 2, 2]
+            # nn.ReLU(),
+            # nn.Flatten(),  # [batch, 96*2*2]
+            # nn.Linear(self.latent_dim, emb_dim),  # [batch, emb_dim]
+            # nn.Sigmoid()
         )
 
-        self.mlp = nn.Sequential(
-            nn.Linear(emb_dim, self.latent_dim), nn.ReLU()  # [batch, 96 * 2 * 2]
-        )
+        # self.mlp = nn.Sequential(
+        #     nn.Linear(emb_dim, self.latent_dim), nn.ReLU()  # [batch, 96 * 2 * 2]
+        # )
 
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(96, 48, 4, stride=2, padding=1),  # [batch, 48, 4, 4]
-            nn.ReLU(),
+            # nn.ConvTranspose2d(96, 48, 4, stride=2, padding=1),  # [batch, 48, 4, 4]
+            # nn.ReLU(),
             nn.ConvTranspose2d(48, 24, 4, stride=2, padding=1),  # [batch, 24, 8, 8]
             nn.ReLU(),
             nn.ConvTranspose2d(24, 12, 4, stride=2, padding=1),  # [batch, 12, 16, 16]
@@ -44,13 +44,13 @@ class Autoencoder(nn.Module):
         # [B, 3, H, W] -> [B, 3, H, W]
         bb = x.size(0)
         x = self.encoder(x)  # [B, emb_dim]
-        x = self.mlp(x) # [B, ]
-        x = x.view(
-            bb,
-            int(self.latent_dim / self.latent_feature_size**2),
-            self.latent_feature_size,
-            self.latent_feature_size,
-        )
+        # x = self.mlp(x) # [B, ]
+        # x = x.view(
+        #     bb,
+        #     int(self.latent_dim / self.latent_feature_size**2),
+        #     self.latent_feature_size,
+        #     self.latent_feature_size,
+        # )
         x = self.decoder(x)
         return x
 
@@ -63,14 +63,14 @@ class Autoencoder(nn.Module):
     def decode(self, x):
         # [B, emb_dim]  -> [B, 3, H, W]
         # latent embedding to raw images
-        x = self.mlp(x)
-        bb = x.size(0)
-        x = x.view(
-            bb,
-            int(self.latent_dim / self.latent_feature_size**2),
-            self.latent_feature_size,
-            self.latent_feature_size,
-        )
+        # x = self.mlp(x)
+        # bb = x.size(0)
+        # x = x.view(
+        #     bb,
+        #     int(self.latent_dim / self.latent_feature_size**2),
+        #     self.latent_feature_size,
+        #     self.latent_feature_size,
+        # )
         x = self.decoder(x)
         return x
 

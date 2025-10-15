@@ -2,8 +2,8 @@
 seed_everything: 42
 trainer:
   accelerator: auto
-  strategy: auto
-  devices: auto
+  strategy: ddp
+  devices: 4
   num_nodes: 1
   precision: null
   logger: null
@@ -48,11 +48,11 @@ model:
       class_path: model.autoencoder.Autoencoder
       init_args:
         img_size: 32
-        emb_dim: 128
+        emb_dim: 256
 data:
   class_path: dataset.cifar10.Cifar10DataModule
   init_args:
-    batch_size: 32
+    batch_size: 128
 optimizer: null
 lr_scheduler: null
 ckpt_path: null

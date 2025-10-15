@@ -1,16 +1,14 @@
 # ckpt_path: /home/btang5/work/2025/geometric-aware-diffusion/logs/autoencoder/lightning_logs/version_0/checkpoints/epoch=32-step=12903.ckpt
 trainer:
-  max_epochs: 100
-  default_root_dir: logs/autoencoder # Name of the experiments
+  max_epochs: 500
+  default_root_dir: logs/autoencoder_vae # Name of the experiments
   devices: 4
   strategy: ddp
 model: 
-  class_path: module.autoencoder_module.AutoEncoderModule
+  class_path: module.autoencoder_vae_module.AutoEncoderModule
   init_args:
     autoencoder: 
-      class_path: model.autoencoder.Autoencoder
-      init_args: 
-        emb_dim: 256
+      class_path: model.autoencoder_vae.VAE_CIFAR10
 data:
   class_path: dataset.cifar10.Cifar10DataModule
   init_args:

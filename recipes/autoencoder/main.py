@@ -16,12 +16,4 @@ def cli_main():
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--ckpt_path", default=None, type=str)
-    # parser.add_argument("--root_dir", default=None, type=str)
-    # parser.add_argument("--devices", default=4, type=int)
-    # args = parser.parse_args()
-    # main(args)
     cli_main()
-
-from lightning.pytorch.demos.boring_classes import DemoModel
