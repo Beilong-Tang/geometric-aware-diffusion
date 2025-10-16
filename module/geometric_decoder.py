@@ -8,7 +8,7 @@ from model.autoencoder import AbstractAutoEncoder
 from model.geometric_aware.token_embed import GeometricEmbedding
 
 
-class GeometricDiffusionDecoderOnly(L.LightningModule):
+class GeometricDiffusionDecoderOnlyModule(L.LightningModule):
     def __init__(self, autoencoder: AbstractAutoEncoder, geometric: GeometricEmbedding):
         super().__init__()
         self.autoencoder = autoencoder
