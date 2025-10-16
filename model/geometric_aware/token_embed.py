@@ -17,6 +17,28 @@ def cal_diff_vector(x: torch.Tensor) -> torch.Tensor:
     return diff
 
 
+class GeometricEmbedding(nn.Module):
+    def __init__(
+        self, start_from_T=False, in_features=128, emb_dim=128, arc_emb_dim=32
+    ):
+        # in_features: the input feature dim of the latent image vector
+        # emb_dim: the input feature output for Wx * x_t
+        # arc_emb_dim: The embedding for the arc length feature
+        super().__init__()
+        self.start_from_T = start_from_T
+        self.encoder = MLP(in_features, emb_dim)
+        self.arc = ArcLengthEmbed(start_from_T, arc_emb_dim)
+        self.curv = CurvatureEmbedding(start_from_T, False)
+
+    def forward(self, x):
+        # x [B, T, D], which is a sequence from x_0 to x_T
+        assert x.size(1) == self.T
+        latent = self.encoder(x) # [B, T, emb_dim]
+        arc_emb = self.arc(x) # [B, T, arc_emb_dim]
+        curvature = self.curv(x) # [B, T, 2*D]
+        return torch.cat([latent, arc_emb, curvature], dim = -1)
+
+
 class MLP(nn.Module):  # w_x
     def __init__(self, in_features, emb_dim):
         # This serves as W_t
@@ -28,12 +50,12 @@ class MLP(nn.Module):  # w_x
 
 
 class ArcLengthEmbed(nn.Module):  # phi_s
-    def __init__(self, start_from_T=True, emb_dim=32, T=1000):
+    def __init__(self, start_from_T=True, emb_dim=32):
         # If the arc length sum from the reversed direction
         super().__init__()
         self.start_from_T = start_from_T
         self.emb_dim = emb_dim
-        self.positional = PositionalEmbedding(emb_dim, T)
+        self.positional = PositionalEmbedding(emb_dim)
 
     def _get_norm_sum(self, x):
         # Get the cumulative arc length
@@ -48,9 +70,10 @@ class ArcLengthEmbed(nn.Module):  # phi_s
         if self.start_from_T:
             norm_sum = torch.flip(norm_sum, dims=(1,))  # [B, T]
         return norm_sum
-
+    
     def forward(self, x):
         # [B,T,N]
+        # Return [B,T,D]
         norm_sum = self._get_norm_sum(x)  # [B, T]
         emb = self.positional(norm_sum)
         return emb
@@ -81,10 +104,10 @@ class CurvatureEmbedding(nn.Module):  # phi_g
         return tangent
 
     def _get_curvature(self, tangent, eps=1.0e-6):
-        delta_s = 1.0 / tangent.size(1)
+        delta_s = 1.0 / (tangent.size(1) - 1)
         curvature = self._get_diff_vector(tangent)  # [B, T, D]
         curvature[:, 0] = curvature[:, 0] / delta_s
-        curvature[:, 1:-1] = curvature[:, 1:-1] / (2*delta_s)
+        curvature[:, 1:-1] = curvature[:, 1:-1] / (2 * delta_s)
         curvature[:, -1] = curvature[:, -1] / delta_s
         norm = torch.norm(curvature, p=2, dim=-1, keepdim=True)
         non_zero_mask = 1 - (norm < eps).float()
@@ -95,6 +118,7 @@ class CurvatureEmbedding(nn.Module):  # phi_g
     def forward(self, x):
         # x: [B, T, D]
         # Returns: [B, T, 2D] phi_g(x_i) which contatenates Tangent and Curvature
+        # If use_curvarture is False, return only tangent [B, T, D]
         tangent = self._get_tangent(x)  # [B, T, D]
         if self.use_curvature:
             curvature = self._get_curvature(tangent)  # [B, T, D]
@@ -106,9 +130,10 @@ class CurvatureEmbedding(nn.Module):  # phi_g
 
 class PositionalEmbedding(nn.Module):
 
-    def __init__(self, d_model=32, T=1000, add_sinusoidal=False):
+    def __init__(self, d_model=32, add_sinusoidal=False):
         super().__init__()
         ## add_positonal: whether to add the sinusoidal to the embedding
+        T = 1001
         emb = torch.arange(0, d_model, step=2) / d_model * math.log(10000)
         emb = torch.exp(-emb)
         pos = torch.arange(T).float()
@@ -132,7 +157,7 @@ class PositionalEmbedding(nn.Module):
         x = torch.stack([torch.sin(x), torch.cos(x)], dim=-1)  # [B, T, d_model//2, 2]
         x = x.view(bb, tt, self.d_model)
         if self.add_sinusoidal:
-            x = x + self.emb.unsqueeze(0)
+            x = x + self.emb.unsqueeze(0)[:,:x.size(1)]
         return x
 
 
@@ -151,8 +176,14 @@ if __name__ == "__main__":
     # print("emb: ", emb.shape)
 
     ## Test 2
-    model = CurvatureEmbedding(start_from_T=False, use_curvature=False)
-    x = torch.randn(2,100,2)
+    # x = torch.tensor([[[1.0, 4], [5, 2], [7, 8]]])
+    # model = CurvatureEmbedding(start_from_T=True, use_curvature=True)
+    # out = model(x)
+    # print(out)
+    # print(out.shape)
+
+    ## Test 3
+    x = torch.randn(4, 101, 128)
+    model = GeometricEmbedding(T = 101)
     out = model(x)
     print(out.shape)
-    print(out)
