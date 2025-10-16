@@ -18,17 +18,19 @@ def cal_diff_vector(x: torch.Tensor) -> torch.Tensor:
 
 
 class GeometricEmbedding(nn.Module):
-    def __init__(
-        self, start_from_T=False, in_features=128, emb_dim=128, arc_emb_dim=32
-    ):
+    def __init__(self, start_from_T=True, emb_dim=128, arc_emb_dim=32):
         # in_features: the input feature dim of the latent image vector
         # emb_dim: the input feature output for Wx * x_t
         # arc_emb_dim: The embedding for the arc length feature
         super().__init__()
         self.start_from_T = start_from_T
-        self.encoder = MLP(in_features, emb_dim)
+        self.emb_dim = emb_dim
         self.arc = ArcLengthEmbed(start_from_T, arc_emb_dim)
         self.curv = CurvatureEmbedding(start_from_T, False)
+    
+    def setup(self, in_features):
+        self.encoder = MLP(in_features, self.emb_dim)
+        pass
 
     def forward(self, x):
         # x [B, T, D], which is a sequence from x_0 to x_T
