@@ -32,7 +32,6 @@ class DecoderOnlyTransformer(nn.Module):
             encoder_layer, num_encoder_layers
         )
 
-
     def forward(self, src: torch.Tensor) -> torch.Tensor:
         """
         Args:
@@ -67,7 +66,7 @@ class DecoderOnlyTransformer(nn.Module):
             input = torch.cat(res, dim=1)  # [B, T, D]
             output = self.forward(input)  # [B, T, D]
             res.append(output[:, -1:])  # [B, 1, D]
-        return res[-1].squeeze(1) # [B. D]
+        return res[-1].squeeze(1)  # [B. D]
 
 
 if __name__ == "__main__":

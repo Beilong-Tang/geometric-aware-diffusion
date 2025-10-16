@@ -1,15 +1,16 @@
 import torch.nn as nn
 import torch
+from model.autoencoder import AbstractAutoEncoder
 
 
-class Autoencoder(nn.Module):
+class Autoencoder(AbstractAutoEncoder):
     def __init__(self, img_size=32, emb_dim=128):
         super().__init__()
         # Input size: [batch, 3, 32, 32]
         # Output size: [batch, 3, 32, 32]
         self.img_size = img_size
         self.emb_dim = emb_dim
-        self.latent_dim = int(48 * (img_size / 8) ** 2) # 
+        self.latent_dim = int(48 * (img_size / 8) ** 2)  #
         self.latent_feature_size = int(self.latent_dim / 48 / 4)
         self.encoder = nn.Sequential(
             nn.Conv2d(3, 12, 4, stride=2, padding=1),  # [batch, 12, 16, 16]
@@ -44,7 +45,7 @@ class Autoencoder(nn.Module):
         # [B, 3, H, W] -> [B, 3, H, W]
         bb = x.size(0)
         x = self.encoder(x)  # [B, emb_dim]
-        x = self.mlp(x) # [B, ]
+        x = self.mlp(x)  # [B, ]
         x = x.view(
             bb,
             int(self.latent_dim / self.latent_feature_size**2),
@@ -73,13 +74,17 @@ class Autoencoder(nn.Module):
         )
         x = self.decoder(x)
         return x
-    
 
-class AdvancedAutoencoder(nn.Module):
+    def get_emb_dim(self):
+        return self.emb_dim
+
+
+class AdvancedAutoencoder(AbstractAutoEncoder):
     """
     An improved autoencoder structure incorporating Batch Normalization for better
     training stability and performance.
     """
+
     def __init__(self, img_size=32, emb_dim=128):
         super().__init__()
         if img_size != 32:
@@ -91,17 +96,17 @@ class AdvancedAutoencoder(nn.Module):
         # Each convolutional layer is now followed by BatchNorm2d for stabilization.
         # [B, 3, 32, 32] -> [B, emb_dim]
         self.encoder = nn.Sequential(
-            nn.Conv2d(3, 12, 4, stride=2, padding=1),      # -> [B, 12, 16, 16]
+            nn.Conv2d(3, 12, 4, stride=2, padding=1),  # -> [B, 12, 16, 16]
             nn.BatchNorm2d(12),
             nn.ReLU(),
-            nn.Conv2d(12, 24, 4, stride=2, padding=1),     # -> [B, 24, 8, 8]
+            nn.Conv2d(12, 24, 4, stride=2, padding=1),  # -> [B, 24, 8, 8]
             nn.BatchNorm2d(24),
             nn.ReLU(),
-            nn.Conv2d(24, 48, 4, stride=2, padding=1),     # -> [B, 48, 4, 4]
+            nn.Conv2d(24, 48, 4, stride=2, padding=1),  # -> [B, 48, 4, 4]
             nn.BatchNorm2d(48),
             nn.ReLU(),
-            nn.Flatten(),                                  # -> [B, 48 * 4 * 4 = 768]
-            nn.Linear(48 * 4 * 4, emb_dim),                # -> [B, emb_dim]
+            nn.Flatten(),  # -> [B, 48 * 4 * 4 = 768]
+            nn.Linear(48 * 4 * 4, emb_dim),  # -> [B, emb_dim]
         )
 
         # --- Decoder ---
@@ -110,14 +115,14 @@ class AdvancedAutoencoder(nn.Module):
         self.decoder = nn.Sequential(
             nn.Linear(emb_dim, 48 * 4 * 4),
             nn.ReLU(),
-            nn.Unflatten(1, (48, 4, 4)),                   # -> [B, 48, 4, 4]
-            nn.ConvTranspose2d(48, 24, 4, stride=2, padding=1), # -> [B, 24, 8, 8]
+            nn.Unflatten(1, (48, 4, 4)),  # -> [B, 48, 4, 4]
+            nn.ConvTranspose2d(48, 24, 4, stride=2, padding=1),  # -> [B, 24, 8, 8]
             nn.BatchNorm2d(24),
             nn.ReLU(),
-            nn.ConvTranspose2d(24, 12, 4, stride=2, padding=1), # -> [B, 12, 16, 16]
+            nn.ConvTranspose2d(24, 12, 4, stride=2, padding=1),  # -> [B, 12, 16, 16]
             nn.BatchNorm2d(12),
             nn.ReLU(),
-            nn.ConvTranspose2d(12, 3, 4, stride=2, padding=1),   # -> [B, 3, 32, 32]
+            nn.ConvTranspose2d(12, 3, 4, stride=2, padding=1),  # -> [B, 3, 32, 32]
             # The final layer uses Sigmoid to output pixel values between 0 and 1.
             # No BatchNorm or ReLU is applied here.
             nn.Sigmoid(),
@@ -136,6 +141,8 @@ class AdvancedAutoencoder(nn.Module):
         z = self.encode(x)
         return self.decode(z)
 
+    def get_emb_dim(self):
+        return self.emb_dim
 
 
 if __name__ == "__main__":

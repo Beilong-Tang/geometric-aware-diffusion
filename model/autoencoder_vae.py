@@ -1,13 +1,17 @@
 import torch
 from torch import nn
 
-class VAE_CIFAR10(nn.Module):
+from model.autoencoder import AbstractAutoEncoder
+
+
+class VAE_CIFAR10(AbstractAutoEncoder):
     """
     A lightweight Variational Autoencoder (VAE) tailored for the CIFAR-10 dataset (32x32 images).
 
     The encoder compresses the input image into a latent space distribution, and the decoder
     reconstructs the image from a sample of that distribution.
     """
+
     def __init__(self, latent_dim=256):
         super().__init__()
         self.latent_dim = latent_dim
@@ -15,15 +19,23 @@ class VAE_CIFAR10(nn.Module):
         # --- Encoder ---
         # Takes a [batch, 3, 32, 32] image and maps it to the latent space.
         self.encoder = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=4, stride=2, padding=1),  # -> [batch, 32, 16, 16]
+            nn.Conv2d(
+                3, 32, kernel_size=4, stride=2, padding=1
+            ),  # -> [batch, 32, 16, 16]
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1), # -> [batch, 64, 8, 8]
+            nn.Conv2d(
+                32, 64, kernel_size=4, stride=2, padding=1
+            ),  # -> [batch, 64, 8, 8]
             nn.ReLU(),
-            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1), # -> [batch, 128, 4, 4]
+            nn.Conv2d(
+                64, 128, kernel_size=4, stride=2, padding=1
+            ),  # -> [batch, 128, 4, 4]
             nn.ReLU(),
-            nn.Conv2d(128, 256, kernel_size=4, stride=1, padding=0), # -> [batch, 256, 1, 1]
+            nn.Conv2d(
+                128, 256, kernel_size=4, stride=1, padding=0
+            ),  # -> [batch, 256, 1, 1]
             nn.ReLU(),
-            nn.Flatten(), # -> [batch, 256]
+            nn.Flatten(),  # -> [batch, 256]
         )
 
         # The flattened feature size after the convolutional layers
@@ -36,23 +48,34 @@ class VAE_CIFAR10(nn.Module):
         # --- Decoder ---
         # Takes a sample from the latent space [batch, latent_dim] and maps it back to an image.
         self.decoder_fc = nn.Sequential(
-            nn.Linear(latent_dim, self.conv_output_size),
-            nn.ReLU()
+            nn.Linear(latent_dim, self.conv_output_size), nn.ReLU()
         )
 
         self.decoder = nn.Sequential(
             # Input will be reshaped to [batch, 256, 1, 1]
-            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=1, padding=0), # -> [batch, 128, 4, 4]
+            nn.ConvTranspose2d(
+                256, 128, kernel_size=4, stride=1, padding=0
+            ),  # -> [batch, 128, 4, 4]
             nn.ReLU(),
-            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1), # -> [batch, 64, 8, 8]
+            nn.ConvTranspose2d(
+                128, 64, kernel_size=4, stride=2, padding=1
+            ),  # -> [batch, 64, 8, 8]
             nn.ReLU(),
-            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),  # -> [batch, 32, 16, 16]
+            nn.ConvTranspose2d(
+                64, 32, kernel_size=4, stride=2, padding=1
+            ),  # -> [batch, 32, 16, 16]
             nn.ReLU(),
-            nn.ConvTranspose2d(32, 3, kernel_size=4, stride=2, padding=1),   # -> [batch, 3, 32, 32]
-            nn.Sigmoid(), # Use Sigmoid to ensure output pixel values are in [0, 1]
+            nn.ConvTranspose2d(
+                32, 3, kernel_size=4, stride=2, padding=1
+            ),  # -> [batch, 3, 32, 32]
+            nn.Sigmoid(),  # Use Sigmoid to ensure output pixel values are in [0, 1]
         )
 
     def encode(self, x):
+        out = self._encode(x)
+        return out[0]
+
+    def _encode(self, x):
         """
         Encodes an input image into the mean and log-variance parameters.
 
@@ -90,10 +113,13 @@ class VAE_CIFAR10(nn.Module):
         """
         Full forward pass of the VAE.
         """
-        mu, log_var = self.encode(x)
+        mu, log_var = self._encode(x)
         z = self.reparameterize(mu, log_var)
         reconstruction = self.decode(z)
         return reconstruction, mu, log_var
+
+    def get_emb_dim(self):
+        return self.latent_dim
 
 
 def vae_loss_function(recon_x, x, mu, log_var):
@@ -101,7 +127,9 @@ def vae_loss_function(recon_x, x, mu, log_var):
     Calculates the VAE loss, which is a sum of reconstruction loss and KL divergence.
     """
     # Use Binary Cross Entropy for reconstruction loss, assuming input is normalized to [0,1]
-    recon_loss = nn.functional.binary_cross_entropy(recon_x.view(-1, 3*32*32), x.view(-1, 3*32*32), reduction='sum')
+    recon_loss = nn.functional.binary_cross_entropy(
+        recon_x.view(-1, 3 * 32 * 32), x.view(-1, 3 * 32 * 32), reduction="sum"
+    )
 
     # KL divergence regularization
     kld = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
@@ -111,7 +139,7 @@ def vae_loss_function(recon_x, x, mu, log_var):
 
 if __name__ == "__main__":
     x = torch.randn(5, 3, 32, 32)
-    model =VAE_CIFAR10()
-    mu, log_var = model.encode(x)
+    model = VAE_CIFAR10()
+    mu, log_var = model._encode(x)
     out = model.decode(mu)
     print(f"emb shape {mu.shape}, out shape {out.shape}")

@@ -1,8 +1,26 @@
+import abc
 import torch.nn as nn
 import torch
 
 
-class Autoencoder(nn.Module):
+class AbstractAutoEncoder(nn.Module, metaclass=abc.ABCMeta):
+    """
+    An abstract base class for PyTorch models with an abstract property.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    @abc.abstractmethod
+    def get_emb_dim(self) -> int:
+        pass
+
+    @abc.abstractmethod
+    def encode(self, x):
+        pass
+
+
+class Autoencoder(AbstractAutoEncoder):
     def __init__(self, img_size=32, emb_dim=128):
         super().__init__()
         # Input size: [batch, 3, 32, 32]
@@ -17,7 +35,7 @@ class Autoencoder(nn.Module):
             nn.Conv2d(12, 24, 4, stride=2, padding=1),  # [batch, 24, 8, 8]
             nn.ReLU(),
             nn.Conv2d(24, 48, 4, stride=2, padding=1),  # [batch, 48, 4, 4]
-            nn.ReLU()
+            nn.ReLU(),
             # nn.Conv2d(48, 96, 4, stride=2, padding=1),  # [batch, 96, 2, 2]
             # nn.ReLU(),
             # nn.Flatten(),  # [batch, 96*2*2]
@@ -73,6 +91,9 @@ class Autoencoder(nn.Module):
         # )
         x = self.decoder(x)
         return x
+
+    def get_emb_dim(self):
+        return self.emb_dim
 
 
 if __name__ == "__main__":

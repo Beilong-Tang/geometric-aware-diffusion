@@ -33,10 +33,10 @@ class GeometricEmbedding(nn.Module):
     def forward(self, x):
         # x [B, T, D], which is a sequence from x_0 to x_T
         assert x.size(1) == self.T
-        latent = self.encoder(x) # [B, T, emb_dim]
-        arc_emb = self.arc(x) # [B, T, arc_emb_dim]
-        curvature = self.curv(x) # [B, T, 2*D]
-        return torch.cat([latent, arc_emb, curvature], dim = -1)
+        latent = self.encoder(x)  # [B, T, emb_dim]
+        arc_emb = self.arc(x)  # [B, T, arc_emb_dim]
+        curvature = self.curv(x)  # [B, T, 2*D]
+        return torch.cat([latent, arc_emb, curvature], dim=-1)
 
 
 class MLP(nn.Module):  # w_x
@@ -70,7 +70,7 @@ class ArcLengthEmbed(nn.Module):  # phi_s
         if self.start_from_T:
             norm_sum = torch.flip(norm_sum, dims=(1,))  # [B, T]
         return norm_sum
-    
+
     def forward(self, x):
         # [B,T,N]
         # Return [B,T,D]
@@ -157,7 +157,7 @@ class PositionalEmbedding(nn.Module):
         x = torch.stack([torch.sin(x), torch.cos(x)], dim=-1)  # [B, T, d_model//2, 2]
         x = x.view(bb, tt, self.d_model)
         if self.add_sinusoidal:
-            x = x + self.emb.unsqueeze(0)[:,:x.size(1)]
+            x = x + self.emb.unsqueeze(0)[:, : x.size(1)]
         return x
 
 
@@ -184,6 +184,6 @@ if __name__ == "__main__":
 
     ## Test 3
     x = torch.randn(4, 101, 128)
-    model = GeometricEmbedding(T = 101)
+    model = GeometricEmbedding(T=101)
     out = model(x)
     print(out.shape)
