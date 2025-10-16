@@ -58,10 +58,10 @@ class ArcLengthEmbed(nn.Module):  # phi_s
 
 class CurvatureEmbedding(nn.Module):  # phi_g
 
-    def __init__(self, start_from_T=True, T=1000):
+    def __init__(self, start_from_T=True, use_curvature=False):
         super().__init__()
         self.start_from_T = start_from_T
-        self.delta_s = 1.0 / T
+        self.use_curvature = use_curvature
 
     def _get_diff_vector(self, x):
         # x: [B, T, D]
@@ -72,25 +72,35 @@ class CurvatureEmbedding(nn.Module):  # phi_g
         else:
             return diff
 
-    def _get_tangent(self, x):
+    def _get_tangent(self, x, eps=1.0e-6):
         tangent = self._get_diff_vector(x)  # [B, T, D]
-        tangent = tangent / torch.norm(tangent, p=2, dim=-1, keepdim=True)
+        norm = torch.norm(tangent, p=2, dim=-1, keepdim=True)
+        non_zero_mask = 1 - (norm < eps).float()
+        tangent = F.normalize(tangent, dim=-1, eps=eps)
+        tangent = tangent * non_zero_mask
         return tangent
 
-    def _get_curvature(self, tangent):
+    def _get_curvature(self, tangent, eps=1.0e-6):
+        delta_s = 1.0 / tangent.size(1)
         curvature = self._get_diff_vector(tangent)  # [B, T, D]
-        curvature[:, 0] = curvature[:, 0] / self.delta_s
-        curvature[:, 1:-1] = curvature[:, 1:-1] / self.delta_s
-        curvature[:, -1] = curvature[:, -1] / self.delta_s
-        curvature = curvature / torch.norm(curvature, p=2, dim=-1, keepdim=True)
+        curvature[:, 0] = curvature[:, 0] / delta_s
+        curvature[:, 1:-1] = curvature[:, 1:-1] / (2*delta_s)
+        curvature[:, -1] = curvature[:, -1] / delta_s
+        norm = torch.norm(curvature, p=2, dim=-1, keepdim=True)
+        non_zero_mask = 1 - (norm < eps).float()
+        curvature = F.normalize(curvature, dim=-1, eps=eps)
+        curvature = curvature * non_zero_mask
         return curvature
 
     def forward(self, x):
         # x: [B, T, D]
         # Returns: [B, T, 2D] phi_g(x_i) which contatenates Tangent and Curvature
         tangent = self._get_tangent(x)  # [B, T, D]
-        curvature = self._get_curvature(tangent)  # [B, T, D]
-        emb = torch.cat([tangent, curvature], dim=-1)
+        if self.use_curvature:
+            curvature = self._get_curvature(tangent)  # [B, T, D]
+            emb = torch.cat([tangent, curvature], dim=-1)
+        else:
+            emb = tangent
         return emb
 
 
@@ -141,7 +151,8 @@ if __name__ == "__main__":
     # print("emb: ", emb.shape)
 
     ## Test 2
-    model = CurvatureEmbedding()
-    x = torch.randn(3, 10, 78)
+    model = CurvatureEmbedding(start_from_T=False, use_curvature=False)
+    x = torch.randn(2,100,2)
     out = model(x)
     print(out.shape)
+    print(out)
