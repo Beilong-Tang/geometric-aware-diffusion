@@ -23,5 +23,8 @@ class GeometricDiffusionDecoderOnly(L.LightningModule):
     def validation_step(self, batch, batch_idx):
         pass
 
+    def test_step(self, batch, batch_idx):
+        pass
+
     def configure_optimizers(self):
         pass
