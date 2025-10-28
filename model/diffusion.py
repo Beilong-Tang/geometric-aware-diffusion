@@ -5,6 +5,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 
+
 class AbstractDiffusion(nn.Module, metaclass=abc.ABCMeta):
     def __init__(self):
         super().__init__()
@@ -57,14 +58,14 @@ class Diffusion(nn.Module):
         # [t] → [1, t, 1]
         sqrt_alpha_bar = self.sqrt_alphas_bar[:t].view(1, t, 1)
         sqrt_one_minus_alpha_bar = self.sqrt_one_minus_alphas_bar[:t].view(1, t, 1)
-        res = sqrt_alpha_bar * x_0 +  sqrt_one_minus_alpha_bar * eps  # [B, t, D]
+        res = sqrt_alpha_bar * x_0 + sqrt_one_minus_alpha_bar * eps  # [B, t, D]
         res = torch.cat([x_0, res], dim=1)
         return res
 
 
 if __name__ == "__main__":
     model = Diffusion(beta_1=0.02, beta_T=1.0e-4, t_end=3)
-    x_0 = torch.ones(3,2, dtype=torch.float)
+    x_0 = torch.ones(3, 2, dtype=torch.float)
     out = model.sample(x_0)
     print(out.shape)
     print(out)
