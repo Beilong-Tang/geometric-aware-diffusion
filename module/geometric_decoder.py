@@ -1,16 +1,9 @@
 import lightning as L
 import torch
-import torch.optim as optim
-import torch.nn.functional as F
-import torch.nn as nn
 import torchvision.utils as vutils
 import os
 
-
-from model.autoencoder import AbstractAutoEncoder
-from model.geometric_aware.token_embed import GeometricEmbedding
 from model.geometric import GeometricDiffusionDecoderOnly
-
 
 class GeometricDiffusionDecoderOnlyModule(L.LightningModule):
     def __init__(self, geometric_decoder_only: GeometricDiffusionDecoderOnly):
