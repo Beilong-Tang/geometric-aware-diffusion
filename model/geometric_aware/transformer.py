@@ -13,25 +13,31 @@ def generate_square_subsequent_mask(sz: int) -> torch.Tensor:
 class DecoderOnlyTransformer(nn.Module):
     def __init__(
         self,
-        d_model,
         nhead: int,
         num_encoder_layers: int,
         dim_feedforward: int,
         dropout: float = 0.1,
     ):
         super().__init__()
+        self.nhead = nhead
+        self.num_encoder_layers = num_encoder_layers
+        self.dim_feedforward = dim_feedforward
+        self.dropout = dropout
+
+    def setup(self, d_model):
         self.d_model = d_model
         # Token and positional embeddings
 
         # The core of the model: A standard TransformerEncoder
         encoder_layer = nn.TransformerEncoderLayer(
-            d_model, nhead, dim_feedforward, dropout, batch_first=True
+            d_model, self.nhead, self.dim_feedforward, self.dropout, batch_first=True
         )
         self.transformer_encoder = nn.TransformerEncoder(
-            encoder_layer, num_encoder_layers
+            encoder_layer, self.num_encoder_layers
         )
         if self.final_linear:
             self.linear = nn.Linear(d_model, d_model)
+        pass
 
     def forward(self, src: torch.Tensor) -> torch.Tensor:
         """
@@ -70,7 +76,7 @@ class GeometricDecoderOnly(nn.Module):
         target = x[:, 1:]
         loss = F.mse_loss(output, target)
 
-        result['output'] = output
+        result["output"] = output
         return loss, result
 
     @torch.no_grad()

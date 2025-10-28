@@ -1,0 +1,30 @@
+# ckpt_path: /home/btang5/work/2025/geometric-aware-diffusion/logs/autoencoder/lightning_logs/version_0/checkpoints/epoch=32-step=12903.ckpt
+trainer:
+  max_epochs: 100
+  default_root_dir: logs/autoencoder # Name of the experiments
+  devices: 4
+  strategy: ddp
+model: 
+  class_path: module.geometric_decoder.GeometricDiffusionDecoderOnlyModule
+  init_args:
+    geometric_decoder_only: 
+      class_path: model.geometric.GeometricDiffusionDecoderOnly
+      init_args: 
+        autoencoder: 
+          class_path: model.autoencoder_linear.Autoencoder
+        autoencoder_ckpt: logs/autoencoder_linear_advanced/lightning_logs/version_0/checkpoints/epoch=99-step=9800.ckpt
+        geometric:
+          class_path: model.geometric_aware.token_emb.GeometricEmbedding
+        decoder_only_transformer: 
+          class_path: model.geometric_aware.transformer.DecoderOnlyTransformer
+          init_args: 
+            d_model: 
+            nhead: 
+        diffusion:
+          class_path:
+          init_args:
+data:
+  class_path: dataset.cifar10.Cifar10DataModule
+  init_args:
+    batch_size: 128
+  

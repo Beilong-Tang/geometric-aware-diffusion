@@ -25,19 +25,28 @@ class GeometricEmbedding(nn.Module):
         super().__init__()
         self.start_from_T = start_from_T
         self.emb_dim = emb_dim
+        self.arc_emb_dim = arc_emb_dim
         self.arc = ArcLengthEmbed(start_from_T, arc_emb_dim)
         self.curv = CurvatureEmbedding(start_from_T, False)
 
     def setup(self, in_features):
         self.encoder = MLP(in_features, self.emb_dim)
+        self.in_features = in_features
         pass
+
+    def get_token_emb(self):
+        if self.curv.use_curvature is False:
+            return self.emb_dim + self.arc_emb_dim + self.in_features
+        else:
+            return self.emb_dim + self.arc_emb_dim + self.in_features * 2
 
     def forward(self, x):
         # x [B, T, D], which is a sequence from x_0 to x_T
         # assert x.size(1) == self.T
+        # Result shape: [B, T, emb_dim + arc_emb_dim + 2*in_feature (or feature)]
         latent = self.encoder(x)  # [B, T, emb_dim]
         arc_emb = self.arc(x)  # [B, T, arc_emb_dim]
-        curvature = self.curv(x)  # [B, T, 2*D]
+        curvature = self.curv(x)  # [B, T, 2*D] or [B, T, D]
         return torch.cat([latent, arc_emb, curvature], dim=-1)
 
 
@@ -185,7 +194,8 @@ if __name__ == "__main__":
     # print(out.shape)
 
     ## Test 3
-    x = torch.randn(4, 101, 128)
-    model = GeometricEmbedding(T=101)
+    x = torch.randn(4, 101, 256)
+    model = GeometricEmbedding()
+    model.setup(256)
     out = model(x)
     print(out.shape)
