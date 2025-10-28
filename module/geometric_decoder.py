@@ -19,7 +19,7 @@ class GeometricDiffusionDecoderOnlyModule(L.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, _ = batch
-        loss, _ = self.geometric_decoder_only(batch)
+        loss, _ = self.geometric_decoder_only(x)
         self.log("mse", loss, prog_bar=True)
         return loss
 
