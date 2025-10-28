@@ -1,25 +1,61 @@
-## 
-import abc
+##
+import torch
 import torch.nn as nn
 
 from model.autoencoder import AbstractAutoEncoder
 from model.geometric_aware.token_embed import GeometricEmbedding
+from model.geometric_aware.transformer import (
+    DecoderOnlyTransformer,
+    GeometricDecoderOnly,
+)
+from model.diffusion import Diffusion
 
-class AbstractGeometricDiffusion(nn.Module, metaclass=abc.ABCMeta):
-    def __init__(self, autoencoder:AbstractAutoEncoder, geometic:GeometricEmbedding):
+
+class GeometricDiffusionDecoderOnly(nn.Module):
+    def __init__(
+        self,
+        autoencoder: AbstractAutoEncoder,
+        autoencoder_ckpt: str,
+        geometric: GeometricEmbedding,
+        decoder_only_transformer: DecoderOnlyTransformer,
+        diffusion: Diffusion,
+    ):
         super().__init__()
-    
-    @abc.abstractmethod
-    def sample(self, x0):
-        ## Given x0, sample points using DDPM forward
-        pass
+        # Here T stands for the total number of transitions
+        self.autoencoder = autoencoder
+        self.geometric = geometric
+        self.diffusion = diffusion
+        self.geometric_decoder_only = GeometricDecoderOnly(decoder_only_transformer)
 
-class GeometricDiffusionDecoderOnly(AbstractGeometricDiffusion):
-    def __init__(self):
-        super().__init__()
+        # autoencoder loading ckpt
+        ckpt = torch.load(autoencoder_ckpt, map_location="cpu")
+        autoencoder.load_state_dict(ckpt["state_dict"])
+        # Freeze autoencoder
+        for p in autoencoder.parameters():
+            p.requires_grad = False
 
-    def sample(self, x0):
-        pass
+    def forward(self, x):
+        """
+        Input:
+            x: [B, C, H, W], raw images
+        Returns:
+            MSE loss
+        """
+        z = self.autoencoder.encode(x)  # [B, D]
+        samples_img = self.diffusion.sample(z)  # [B, T+1, D]
+        tokens = self.geometric(samples_img)  # [B, T+1, D]
+        tokens = torch.flip(tokens, dims=(1,))  # [B, T+1, D]
+        loss, result = self.geometric_decoder_only(tokens)
+        return loss, result
 
-    def forward(self):
-        pass
+    def evaluate(self, x):
+        """
+        Input:
+            x: [B, C, H, W]: x0, the original clean image
+        """
+        loss, result = self.forward(x)
+
+        final_emb = result["output"][:, -1]  # [B, D']
+        latent = final_emb[:, : self.autoencoder.get_emb_dim()]
+        img = self.autoencoder.decode(latent)  # [B, C, H, W]
+        return loss, img

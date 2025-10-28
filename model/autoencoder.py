@@ -18,6 +18,10 @@ class AbstractAutoEncoder(nn.Module, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def encode(self, x):
         pass
+    
+    @abc.abstractmethod
+    def decode(self,z):
+        pass
 
 
 class Autoencoder(AbstractAutoEncoder):

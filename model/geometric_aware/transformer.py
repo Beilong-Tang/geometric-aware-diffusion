@@ -1,8 +1,8 @@
 # Decoder-only style transformer
-
 import torch.nn as nn
-import math
 import torch
+
+import torch.nn.functional as F
 
 
 def generate_square_subsequent_mask(sz: int) -> torch.Tensor:
@@ -14,7 +14,6 @@ class DecoderOnlyTransformer(nn.Module):
     def __init__(
         self,
         d_model,
-        final_img_dim,
         nhead: int,
         num_encoder_layers: int,
         dim_feedforward: int,
@@ -31,12 +30,13 @@ class DecoderOnlyTransformer(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(
             encoder_layer, num_encoder_layers
         )
+        if self.final_linear:
+            self.linear = nn.Linear(d_model, d_model)
 
     def forward(self, src: torch.Tensor) -> torch.Tensor:
         """
         Args:
             src: Tensor, shape [batch_size, seq_len, D]
-            to_latent_img: Whether to apply a Linear to the final output
 
         Returns:
             output Tensor of shape [batch_size, seq_len, vocab_size]
@@ -51,8 +51,27 @@ class DecoderOnlyTransformer(nn.Module):
             mask=causal_mask,
             is_causal=False,  # Important: We provide the mask manually
         )  # [B, T, D]
-
         return output
+
+
+class GeometricDecoderOnly(nn.Module):
+    def __init__(self, decoder_only: DecoderOnlyTransformer):
+        super().__init__()
+        self.decoder_only = decoder_only
+
+    def forward(self, x):
+        """
+        Input:
+            x shape: [B, T, D]
+        """
+        result = {}
+        input = x[:, :-1]  # [B, T-1, D]
+        output = self.decoder_only(input)  # [B, T-1, D]
+        target = x[:, 1:]
+        loss = F.mse_loss(output, target)
+
+        result['output'] = output
+        return loss, result
 
     @torch.no_grad()
     def inference(self, xT, T=1000):
@@ -78,6 +97,6 @@ if __name__ == "__main__":
     print(out.shape)
 
     x = torch.randn(3, 1, 128)
-    out = model.inference(x, T=100)
-    print(out.shape)
+    # out = model.inference(x, T=100)
+    # print(out.shape)
     pass

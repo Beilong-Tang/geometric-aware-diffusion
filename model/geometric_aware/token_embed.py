@@ -27,14 +27,14 @@ class GeometricEmbedding(nn.Module):
         self.emb_dim = emb_dim
         self.arc = ArcLengthEmbed(start_from_T, arc_emb_dim)
         self.curv = CurvatureEmbedding(start_from_T, False)
-    
+
     def setup(self, in_features):
         self.encoder = MLP(in_features, self.emb_dim)
         pass
 
     def forward(self, x):
         # x [B, T, D], which is a sequence from x_0 to x_T
-        assert x.size(1) == self.T
+        # assert x.size(1) == self.T
         latent = self.encoder(x)  # [B, T, emb_dim]
         arc_emb = self.arc(x)  # [B, T, arc_emb_dim]
         curvature = self.curv(x)  # [B, T, 2*D]
