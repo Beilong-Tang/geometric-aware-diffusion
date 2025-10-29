@@ -66,9 +66,13 @@ class DecoderOnlyTransformer(nn.Module):
 
 
 class GeometricDecoderOnly(nn.Module):
-    def __init__(self, decoder_only: DecoderOnlyTransformer):
+    def __init__(self, decoder_only: DecoderOnlyTransformer, T):
         super().__init__()
+        """
+        T denotes the actual final step
+        """
         self.decoder_only = decoder_only
+        self.T = T
 
     def forward(self, x):
         """
@@ -85,14 +89,14 @@ class GeometricDecoderOnly(nn.Module):
         return loss, result
 
     @torch.no_grad()
-    def inference(self, xT, T=1000):
+    def inference(self, xT):
         # xT: [B, D] or [B, 1, D]
         # T: inference time step
         # Return [B,D]
         if len(xT.shape) == 2:
             xT = xT.unsqueeze(1)  # [B, 1, D]
         res = [xT]
-        for _ in range(0, T):
+        for _ in range(0, self.T):
             input = torch.cat(res, dim=1)  # [B, T, D]
             output = self.forward(input)  # [B, T, D]
             res.append(output[:, -1:])  # [B, 1, D]
