@@ -36,6 +36,11 @@ class GeometricDiffusionDecoderOnlyModule(L.LightningModule):
             vutils.save_image(x.cpu(), target_path, normalize=True)
             vutils.save_image(img.cpu(), output_path, normalize=True)
             pass
+    
+    def test_step(self, batch, batch_idx):
+        x, _ = batch
+        
+        pass
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1.0e-4)

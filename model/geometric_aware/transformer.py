@@ -17,7 +17,7 @@ class DecoderOnlyTransformer(nn.Module):
         num_encoder_layers: int,
         dim_feedforward: int,
         dropout: float = 0.1,
-        final_linear = True,
+        final_linear=True,
     ):
         super().__init__()
         self.nhead = nhead
@@ -98,7 +98,7 @@ class GeometricDecoderOnly(nn.Module):
         res = [xT]
         for _ in range(0, self.T):
             input = torch.cat(res, dim=1)  # [B, T, D]
-            output = self.forward(input)  # [B, T, D]
+            output = self.decoder_only(input)  # [B, T, D]
             res.append(output[:, -1:])  # [B, 1, D]
         return res[-1].squeeze(1)  # [B. D]
 
@@ -106,12 +106,14 @@ class GeometricDecoderOnly(nn.Module):
 if __name__ == "__main__":
 
     x = torch.randn(3, 100, 128)
-    model = DecoderOnlyTransformer(128, 128, 8, 8, 512)
+    model = DecoderOnlyTransformer(8, 8, 512)
+    model.setup(128)
     print(f"num parameters {sum(i.numel() for i in model.parameters())}")
     out = model(x)
     print(out.shape)
 
+    geometric_decoder_only = GeometricDecoderOnly(model, T=20)
     x = torch.randn(3, 1, 128)
-    # out = model.inference(x, T=100)
-    # print(out.shape)
+    out = geometric_decoder_only.inference(x)
+    print(out.shape)
     pass

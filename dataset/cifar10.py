@@ -12,12 +12,17 @@ class Cifar10DataModule(L.LightningDataModule):
 
     def setup(self, stage):
         transform = transforms.Compose([transforms.ToTensor()])
-        self.trainset = torchvision.datasets.CIFAR10(
-            root="./data", train=True, download=True, transform=transform
-        )
-        self.valset = torchvision.datasets.CIFAR10(
-            root="./data", train=False, download=True, transform=transform
-        )
+        if stage == "fit":
+            self.trainset = torchvision.datasets.CIFAR10(
+                root="./data", train=True, download=True, transform=transform
+            )
+            self.valset = torchvision.datasets.CIFAR10(
+                root="./data", train=False, download=True, transform=transform
+            )
+        if stage == "test":
+            self.valset = torchvision.datasets.CIFAR10(
+                root="./data", train=False, download=True, transform=transform
+            )
 
     def train_dataloader(self):
         return DataLoader(
@@ -31,5 +36,5 @@ class Cifar10DataModule(L.LightningDataModule):
 
     def test_dataloader(self):
         return DataLoader(
-            self.trainset, batch_size=self.batch_size, shuffle=True, num_workers=4
+            self.valset, batch_size=self.batch_size, shuffle=True, num_workers=4
         )
