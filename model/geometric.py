@@ -99,7 +99,7 @@ class GeometricDiffusionDecoderOnly(AbstractDiffusionDecoderOnly):
         out = out[:, : self.autoencoder.get_emb_dim()]
         img = self.autoencoder.decode(out)
         result = {}
-        result["encoded"] = self.autoencoder.decode(x0)
+        result["encoded"] = self.autoencoder.decode(z)
         return img, result
 
 
@@ -162,5 +162,5 @@ class VanillaDiffusionDecoderOnly(AbstractDiffusionDecoderOnly):
         out = self.geometric_decoder_only.inference(xT_token)  # [B, D]
         img = self.autoencoder.decode(out)
         result = {}
-        result["encoded"] = self.autoencoder.decode(x0)
-        return img
+        result["encoded"] = self.autoencoder.decode(z)
+        return img, result

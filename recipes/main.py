@@ -3,11 +3,6 @@ import sys
 
 sys.path.append(os.getcwd())
 
-from module.autoencoder_module import AutoEncoderModule
-from dataset.cifar10 import Cifar10DataModule
-from lightning.pytorch import seed_everything
-seed_everything(42)
-
 from lightning.pytorch.cli import LightningCLI
 
 
