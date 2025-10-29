@@ -31,7 +31,9 @@ class GeometricDiffusionDecoderOnly(nn.Module):
         self.diffusion = diffusion
 
         decoder_only_transformer.setup(d_model=geometric.get_token_emb_dim())
-        self.geometric_decoder_only = GeometricDecoderOnly(decoder_only_transformer)
+        self.geometric_decoder_only = GeometricDecoderOnly(
+            decoder_only_transformer, T=self.diffusion.t_end
+        )
 
         # autoencoder loading ckpt
         ckpt = torch.load(autoencoder_ckpt, map_location="cpu")
