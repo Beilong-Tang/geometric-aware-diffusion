@@ -23,12 +23,14 @@ class GeometricDiffusionDecoderOnly(nn.Module):
         super().__init__()
         # Here T stands for the total number of transitions
         self.autoencoder = autoencoder
+        self.autoencoder.eval()
+
         self.geometric = geometric
         self.geometric.setup(autoencoder.get_emb_dim())
 
         self.diffusion = diffusion
 
-        decoder_only_transformer.setup()
+        decoder_only_transformer.setup(d_model = geometric.get_token_emb_dim())
         self.geometric_decoder_only = GeometricDecoderOnly(decoder_only_transformer)
 
         # autoencoder loading ckpt

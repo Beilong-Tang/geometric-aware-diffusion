@@ -34,7 +34,7 @@ class GeometricEmbedding(nn.Module):
         self.in_features = in_features
         pass
 
-    def get_token_emb(self):
+    def get_token_emb_dim(self):
         if self.curv.use_curvature is False:
             return self.emb_dim + self.arc_emb_dim + self.in_features
         else:

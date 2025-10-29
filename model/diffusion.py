@@ -32,7 +32,7 @@ class Diffusion(nn.Module):
         self.T = T
         self.t_end = t_end
 
-        self.register_buffer("betas", torch.linspace(beta_1, beta_T, T).double())
+        self.register_buffer("betas", torch.linspace(beta_1, beta_T, T).float())
         alphas = 1.0 - self.betas
         alphas_bar = torch.cumprod(alphas, dim=0)
 
@@ -53,7 +53,7 @@ class Diffusion(nn.Module):
         else:
             t = self.t_end
         bb, dd = x_0.shape
-        eps = torch.randn(bb, t, dd)  # [B, t, D]
+        eps = torch.randn(bb, t, dd, dtype=x_0.dtype, device=x_0.device)  # [B, t, D]
         x_0 = x_0.unsqueeze(1)  # [B, 1, D]
         # [t] → [1, t, 1]
         sqrt_alpha_bar = self.sqrt_alphas_bar[:t].view(1, t, 1)

@@ -17,12 +17,14 @@ class DecoderOnlyTransformer(nn.Module):
         num_encoder_layers: int,
         dim_feedforward: int,
         dropout: float = 0.1,
+        final_linear = True,
     ):
         super().__init__()
         self.nhead = nhead
         self.num_encoder_layers = num_encoder_layers
         self.dim_feedforward = dim_feedforward
         self.dropout = dropout
+        self.final_linear = final_linear
 
     def setup(self, d_model):
         self.d_model = d_model
@@ -57,7 +59,10 @@ class DecoderOnlyTransformer(nn.Module):
             mask=causal_mask,
             is_causal=False,  # Important: We provide the mask manually
         )  # [B, T, D]
-        return output
+        if self.final_linear:
+            return self.linear(output)
+        else:
+            return output
 
 
 class GeometricDecoderOnly(nn.Module):

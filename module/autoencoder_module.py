@@ -1,14 +1,15 @@
+from model.autoencoder import AbstractAutoEncoder
 import lightning as L
 import torch.optim as optim
 import torch.nn.functional as F
-import torch
 import os
 import torchvision.utils as vutils
 
-class AutoEncoderModule(L.LightningModule):
-    def __init__(self, autoencoder):
+
+class AutoEncoderModule(L.LightningModule, AbstractAutoEncoder):
+    def __init__(self, autoencoder: AbstractAutoEncoder):
         super().__init__()
-        self.autoencoder= autoencoder
+        self.autoencoder = autoencoder
 
     def training_step(self, batch, batch_idx):
         # batch: []
@@ -37,7 +38,15 @@ class AutoEncoderModule(L.LightningModule):
             vutils.save_image(x.cpu(), target_path, normalize=True)
             vutils.save_image(out.cpu(), output_path, normalize=True)
 
-
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters())
         return optimizer
+
+    def encode(self, x):
+        return self.autoencoder.encode(x)
+
+    def decode(self, x):
+        return self.autoencoder.decode(x)
+
+    def get_emb_dim(self):
+        return self.autoencoder.get_emb_dim()
