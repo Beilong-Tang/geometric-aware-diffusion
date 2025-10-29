@@ -5,6 +5,7 @@ import os
 
 from model.geometric import AbstractDiffusionDecoderOnly
 
+
 class GeometricDiffusionDecoderOnlyModule(L.LightningModule):
     def __init__(self, geometric_decoder_only: AbstractDiffusionDecoderOnly):
         super().__init__()
@@ -36,12 +37,24 @@ class GeometricDiffusionDecoderOnlyModule(L.LightningModule):
             vutils.save_image(x.cpu(), target_path, normalize=True)
             vutils.save_image(img.cpu(), output_path, normalize=True)
             pass
-    
+
     def test_step(self, batch, batch_idx):
+        rank = self.trainer.global_rank
+        root_dir = self.trainer.log_dir
+        target_dir = os.path.join(root_dir, "target")
+        encoded_dir = os.path.join(root_dir, "encoded")
+        output_dir = os.path.join(root_dir, "output")
+        for p in [target_dir, encoded_dir, output_dir]:
+            os.makedirs(p, exist_ok=True)
         with torch.no_grad():
             x, _ = batch
-            img = self.geometric_decoder_only.test(x) # [B, C, H, W]
-            
+            img, result = self.geometric_decoder_only.test(x)  # [B, C, H, W]
+        for i, _img in enumerate(result["encoded"]):
+            vutils.save_image(_img, f"{encoded_dir}/{batch_idx}_{i}_r{rank}.png")
+        for i, _img in enumerate(img):
+            vutils.save_image(_img, f"{output_dir}/{batch_idx}_{i}_r{rank}.png")
+        for i, _img in enumerate(x):
+            vutils.save_image(_img, f"{target_dir}/{batch_idx}_{i}_r{rank}.png")
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1.0e-4)
