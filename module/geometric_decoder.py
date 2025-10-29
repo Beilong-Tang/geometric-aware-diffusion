@@ -38,9 +38,10 @@ class GeometricDiffusionDecoderOnlyModule(L.LightningModule):
             pass
     
     def test_step(self, batch, batch_idx):
-        x, _ = batch
-        
-        pass
+        with torch.no_grad():
+            x, _ = batch
+            img = self.geometric_decoder_only.test(x) # [B, C, H, W]
+            
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1.0e-4)
