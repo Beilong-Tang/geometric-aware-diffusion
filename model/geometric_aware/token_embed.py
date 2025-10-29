@@ -30,24 +30,24 @@ class GeometricEmbedding(nn.Module):
         self.curv = CurvatureEmbedding(start_from_T, False)
 
     def setup(self, in_features):
-        self.encoder = MLP(in_features, self.emb_dim)
+        # self.encoder = MLP(in_features, self.emb_dim)
         self.in_features = in_features
         pass
 
     def get_token_emb_dim(self):
         if self.curv.use_curvature is False:
-            return self.emb_dim + self.arc_emb_dim + self.in_features
+            return self.emb_dim + self.arc_emb_dim + self.emb_dim
         else:
-            return self.emb_dim + self.arc_emb_dim + self.in_features * 2
+            return self.emb_dim + self.arc_emb_dim + self.emb_dim* 2
 
     def forward(self, x):
         # x [B, T, D], which is a sequence from x_0 to x_T
         # assert x.size(1) == self.T
         # Result shape: [B, T, emb_dim + arc_emb_dim + 2*in_feature (or feature)]
-        latent = self.encoder(x)  # [B, T, emb_dim]
+        # latent = self.encoder(x)  # [B, T, emb_dim]
         arc_emb = self.arc(x)  # [B, T, arc_emb_dim]
         curvature = self.curv(x)  # [B, T, 2*D] or [B, T, D]
-        return torch.cat([latent, arc_emb, curvature], dim=-1)
+        return torch.cat([x, arc_emb, curvature], dim=-1)
 
 
 class MLP(nn.Module):  # w_x
