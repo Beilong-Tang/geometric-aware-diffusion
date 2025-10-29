@@ -21,7 +21,7 @@ model:
         decoder_only_transformer: 
           class_path: model.geometric_aware.transformer.DecoderOnlyTransformer
           init_args: 
-            nhead: 12
+            nhead: 16
             num_encoder_layers: 12
             dim_feedforward: 2048
         diffusion:
