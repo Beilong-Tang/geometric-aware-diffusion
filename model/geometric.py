@@ -1,4 +1,5 @@
 ##
+import abc
 import torch
 import torch.nn as nn
 
@@ -11,7 +12,24 @@ from model.geometric_aware.transformer import (
 from model.diffusion import Diffusion
 
 
-class GeometricDiffusionDecoderOnly(nn.Module):
+class AbstractDiffusionDecoderOnly(nn.Module, metaclass=abc.ABCMeta):
+    """
+    An abstract base class for PyTorch models with an abstract property.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    @abc.abstractmethod
+    def forward(self, x):
+        pass
+
+    @abc.abstractmethod
+    def evaluate(self, z):
+        pass
+
+
+class GeometricDiffusionDecoderOnly(AbstractDiffusionDecoderOnly):
     def __init__(
         self,
         autoencoder: AbstractAutoEncoder,
@@ -69,7 +87,7 @@ class GeometricDiffusionDecoderOnly(nn.Module):
         return loss, img
 
 
-class VanillaDiffusionDecoderOnly(nn.Module):
+class VanillaDiffusionDecoderOnly(AbstractDiffusionDecoderOnly):
     def __init__(
         self,
         autoencoder: AbstractAutoEncoder,
@@ -84,6 +102,7 @@ class VanillaDiffusionDecoderOnly(nn.Module):
 
         self.diffusion = diffusion
 
+        decoder_only_transformer.setup(d_model=self.autoencoder.get_emb_dim())
         self.geometric_decoder_only = GeometricDecoderOnly(
             decoder_only_transformer, T=diffusion.t_end
         )

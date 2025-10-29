@@ -3,10 +3,10 @@ import torch
 import torchvision.utils as vutils
 import os
 
-from model.geometric import GeometricDiffusionDecoderOnly
+from model.geometric import AbstractDiffusionDecoderOnly
 
 class GeometricDiffusionDecoderOnlyModule(L.LightningModule):
-    def __init__(self, geometric_decoder_only: GeometricDiffusionDecoderOnly):
+    def __init__(self, geometric_decoder_only: AbstractDiffusionDecoderOnly):
         super().__init__()
         self.geometric_decoder_only = geometric_decoder_only
 
