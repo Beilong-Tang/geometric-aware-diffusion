@@ -22,8 +22,8 @@ model:
           class_path: model.geometric_aware.transformer.DecoderOnlyTransformer
           init_args: 
             nhead: 6
-            num_encoder_layers: 12
-            dim_feedforward: 2048
+            num_encoder_layers: 8
+            dim_feedforward: 576
         diffusion:
           class_path: model.diffusion.Diffusion
           init_args:
