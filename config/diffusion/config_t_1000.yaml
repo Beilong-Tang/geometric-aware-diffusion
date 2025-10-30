@@ -33,5 +33,5 @@ model:
 data:
   class_path: dataset.cifar10.Cifar10DataModule
   init_args:
-    batch_size: 128
+    batch_size: 64
   
