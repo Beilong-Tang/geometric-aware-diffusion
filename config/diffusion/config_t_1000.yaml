@@ -1,7 +1,7 @@
 # ckpt_path: /home/btang5/work/2025/geometric-aware-diffusion/logs/autoencoder/lightning_logs/version_0/checkpoints/epoch=32-step=12903.ckpt
 trainer:
   max_epochs: 3000
-  default_root_dir: logs/geo_diff # Name of the experiments
+  default_root_dir: logs/geo_diff_t_1000 # Name of the experiments
   devices: 4
   strategy: ddp
 model: 
