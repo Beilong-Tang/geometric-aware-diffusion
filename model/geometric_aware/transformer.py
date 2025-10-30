@@ -89,7 +89,7 @@ class GeometricDecoderOnly(nn.Module):
         return loss, result
 
     @torch.no_grad()
-    def inference(self, xT):
+    def inference(self, xT, intermediate=False):
         # xT: [B, D] or [B, 1, D]
         # T: inference time step
         # Return [B,D]
@@ -100,7 +100,10 @@ class GeometricDecoderOnly(nn.Module):
             input = torch.cat(res, dim=1)  # [B, T, D]
             output = self.decoder_only(input)  # [B, T, D]
             res.append(output[:, -1:])  # [B, 1, D]
-        return res[-1].squeeze(1)  # [B. D]
+        if intermediate:
+            return res[-1].squeeze(1), torch.cat(res, dim = 1)
+        else:
+            return res[-1].squeeze(1)  # [B. D]
 
 
 if __name__ == "__main__":
