@@ -32,7 +32,7 @@ class DecoderOnlyTransformer(nn.Module):
 
         # The core of the model: A standard TransformerEncoder
         encoder_layer = nn.TransformerEncoderLayer(
-            d_model, self.nhead, self.dim_feedforward, self.dropout, batch_first=True
+            d_model, self.nhead, self.dim_feedforward, self.dropout, batch_first=True, norm_first=True
         )
         self.transformer_encoder = nn.TransformerEncoder(
             encoder_layer, self.num_encoder_layers
