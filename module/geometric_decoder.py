@@ -28,15 +28,26 @@ class GeometricDiffusionDecoderOnlyModule(L.LightningModule):
             # Save the output to a folder
             save_path = os.path.join(self.trainer.log_dir, "images")
             os.makedirs(save_path, exist_ok=True)
+
             target_path = os.path.join(
-                save_path, f"epoch_{self.trainer.current_epoch}_target.png"
+                save_path, f"epoch_{self.trainer.current_epoch}_target_last.png"
+            )
+            infer_path = os.path.join(
+                save_path, f"epoch_{self.trainer.current_epoch}_target_infer.png"
+            )
+            encoded_path = os.path.join(
+                save_path, f"epoch_{self.trainer.current_epoch}_encoded.png"
             )
             output_path = os.path.join(
                 save_path, f"epoch_{self.trainer.current_epoch}_output.png"
             )
             vutils.save_image(x.cpu(), target_path, normalize=True)
             vutils.save_image(img.cpu(), output_path, normalize=True)
-            pass
+            # Run an inference
+            img, result = self.geometric_decoder_only.test(x)
+            vutils.save_image(img.cpu(), infer_path, normalize = True)
+            vutils.save_image(result['encoded'].cpu(), encoded_path, normalize = True)
+
 
     def test_step(self, batch, batch_idx):
         rank = self.trainer.global_rank
