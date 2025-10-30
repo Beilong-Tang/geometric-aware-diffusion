@@ -60,7 +60,6 @@ class Diffusion(nn.Module):
         sqrt_one_minus_alpha_bar = self.sqrt_one_minus_alphas_bar[:t].view(1, t, 1)
         res = sqrt_alpha_bar * x_0 + sqrt_one_minus_alpha_bar * eps  # [B, t, D]
         res = torch.cat([x_0, res], dim=1)
-        print(res.shape)
         return res
 
 
