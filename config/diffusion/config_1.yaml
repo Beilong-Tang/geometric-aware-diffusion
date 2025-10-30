@@ -15,7 +15,7 @@ model:
           init_args:
             autoencoder:
               class_path: model.autoencoder_linear.AdvancedAutoencoder
-        autoencoder_ckpt: logs/autoencoder_linear_advanced/lightning_logs/version_0/checkpoints/epoch=99-step=9800.ckpt
+        autoencoder_ckpt: /home/btang5/work/2025/geometric-aware-diffusion/logs/autoencoder_linear_advanced/lightning_logs/version_0/checkpoints/epoch=99-step=9800.ckpt
         geometric:
           class_path: model.geometric_aware.token_embed.GeometricEmbedding
         decoder_only_transformer: 

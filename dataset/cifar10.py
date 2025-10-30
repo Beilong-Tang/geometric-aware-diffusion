@@ -5,7 +5,7 @@ import lightning as L
 
 
 class Cifar10DataModule(L.LightningDataModule):
-    def __init__(self, batch_size):
+    def __init__(self, batch_size: int):
         super().__init__()
         self.batch_size = batch_size
         pass

@@ -26,7 +26,7 @@ def extract(v, t, x_shape):
 
 
 class Diffusion(nn.Module):
-    def __init__(self, beta_1, beta_T, T=1000, t_end=None):
+    def __init__(self, beta_1: float, beta_T: float, T=1000, t_end=None):
         super().__init__()
         # Here T means the total diffusion steps
         self.T = T

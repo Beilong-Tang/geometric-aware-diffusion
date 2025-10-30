@@ -7,7 +7,7 @@ import torchvision.utils as vutils
 
 
 class AutoEncoderModule(L.LightningModule, AbstractAutoEncoder):
-    def __init__(self, autoencoder: AbstractAutoEncoder, test_output_path):
+    def __init__(self, autoencoder: AbstractAutoEncoder):
         super().__init__()
         self.autoencoder = autoencoder
 
